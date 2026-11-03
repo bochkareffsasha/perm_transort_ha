@@ -1,0 +1,13 @@
+{
+  "domain": "perm_transport",
+  "name": "Perm Transport",
+  "version": "1.0.0",
+  "documentation": "https://github.com/bochkareffsasha/perm_transort_ha",
+  "issue_tracker": "https://github.com/bochkareffsasha/perm_transort_ha/issues",
+  "codeowners": ["@bochkareffsasha"],
+  "config_flow": true,
+  "requirements": [],
+  "iot_class": "cloud_polling",
+  "dependencies": []
+}
+
