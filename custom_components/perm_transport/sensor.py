@@ -52,5 +52,6 @@ class PermTransportSensor(CoordinatorEntity[PermTransportCoordinator], SensorEnt
             "stop_name": cfg.get(CONF_STOP_NAME),
             "tracked_routes": cfg.get(CONF_ROUTES),
             "routes": data.get("routes", {}),
+            "routes_minutes": data.get("routes_minutes", {}),
             "last_update": data.get("last_update"),
         }

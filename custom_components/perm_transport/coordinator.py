@@ -58,36 +58,41 @@ class PermTransportCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self._parse(raw)
 
     def _parse(self, raw: dict[str, Any]) -> dict[str, Any]:
-        """Оставляем только нужные маршруты и считаем «ближайший»."""
-        routes_result: dict[str, list[dict[str, Any]]] = {
-            r: [] for r in self.tracked_routes
-        }
+        """Оставляем только нужные маршруты в удобном виде."""
+        # Порядок ключей — как в настройках пользователя
+        routes_str: dict[str, str] = {r: "" for r in self.tracked_routes}
+        routes_min: dict[str, list[int]] = {r: [] for r in self.tracked_routes}
 
         for route_type in raw.get("routeTypes", []) or []:
             for route in route_type.get("routes", []) or []:
                 number = str(route.get("routeNumber", "")).strip()
-                if number not in routes_result:
+                if number not in routes_str:
                     continue
-                routes_result[number] = [
-                    {
-                        "arrivalTime": v.get("arrivalTime"),
-                        "arrivalMinutes": v.get("arrivalMinutes"),
-                        "lowFloor": v.get("lowFloor"),
-                    }
-                    for v in (route.get("vehicles") or [])
-                ]
 
-        minutes = [
-            v["arrivalMinutes"]
-            for arrivals in routes_result.values()
-            for v in arrivals
-            if isinstance(v.get("arrivalMinutes"), (int, float))
-        ]
-        next_minutes = min(minutes) if minutes else None
+                times: list[str] = []
+                mins: list[int] = []
+
+                for v in route.get("vehicles") or []:
+                    at = v.get("arrivalTime") or ""
+                    # "18:46:26" -> "18:46"
+                    short = at[:5] if len(at) >= 5 else at
+                    if short:
+                        times.append(short)
+
+                    m = v.get("arrivalMinutes")
+                    if isinstance(m, (int, float)):
+                        mins.append(int(m))
+
+                routes_str[number] = " ".join(times)
+                routes_min[number] = mins
+
+        flat = [m for ms in routes_min.values() for m in ms]
+        next_minutes = min(flat) if flat else None
 
         return {
             "stop_id": self.stop_id,
-            "routes": routes_result,
+            "routes": routes_str,
+            "routes_minutes": routes_min,
             "next_minutes": next_minutes,
             "last_update": time.time(),
         }
